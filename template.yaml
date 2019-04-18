@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Description: >-
+  Simple interface between AWS IoT Gateway and DynamoDB to act on IoT MQTT 
+  events from the gateway, as well as state changes in the database
+
+Resources:
+  GDoorSensorBackend:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs8.10
+      Handler: index.handler
+      MemorySize: 1024
+      Timeout: 200
+      Environment:
+        Variables:
+          S3_BUCKET: sensesir-code-store
+      Events:
+        

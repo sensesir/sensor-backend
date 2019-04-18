@@ -1,0 +1,11 @@
+{
+  "name": "gdoor-sensor-backend",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {},
+  "dependencies": {
+    "uuid-v4": "0.1.0"
+  },
+  "devDependencies": {}
+}
