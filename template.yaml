@@ -1,20 +1,23 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 
-Description: >-
-  Simple interface between AWS IoT Gateway and DynamoDB to act on IoT MQTT 
-  events from the gateway, as well as state changes in the database
+Description: 
+  This project contains an AWS Lambda function implemented in the Node.js runtime. 
+  It functions as an interface between IoT Device gateway and DynamoDB.
 
 Resources:
   GDoorSensorBackend:
-    Type: AWS::Serverless::Function
+    Type: 'AWS::Serverless::Function'
     Properties:
-      Runtime: nodejs8.10
       Handler: index.handler
+      Runtime: nodejs8.10
+      CodeUri: .
+      Description: ''
       MemorySize: 1024
       Timeout: 200
-      Environment:
-        Variables:
-          S3_BUCKET: sensesir-code-store
+      Role: 'arn:aws:iam::126281209629:role/service-role/SensorBackend'
       Events:
-        
+        IoTRule1:
+          Type: IoTRule
+          Properties:
+            Sql: 'SELECT * FROM "server/#"'
