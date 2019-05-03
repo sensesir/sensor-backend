@@ -83,7 +83,7 @@ module.exports = {
     },
 
     doorStateChange: async (payload) => {
-        console.log(`SUBSCRIBE: Updating record for door ${newState} state => ${payload.sensorUID}`);
+        console.log(`SUBSCRIBE: Updating record for door ${payload.event} state => ${payload.sensorUID}`);
 
         const currentDate = new Date().toISOString();
         const update = {
@@ -95,7 +95,7 @@ module.exports = {
                                doorState = :doorState`,
             ExpressionAttributeValues: {
                 ":lastPing": currentDate,
-                ":doorState": payload.event === "open" ? "Open" : "Closed"            // Todo: Change this to constant
+                ":doorState": payload.event === "open" ? "open" : "closed"
             },
             ReturnValues:"UPDATED_NEW"            
         };
@@ -113,15 +113,15 @@ module.exports = {
                 sensorUID: payload.sensorUID
             },
             UpdateExpression: `set lastPing= :lastPing, 
-                               reconnections = reconnections + increment`,
+                               reconnections = reconnections + :addRecon`,
             ExpressionAttributeValues: {
                 ":lastPing": currentDate,
-                ":increment": 1 
+                ":addRecon": 1 
             },
             ReturnValues:"UPDATED_NEW"            
         };
 
-        return await updateDocument(updateDocument);
+        return await updateDocument(update);
     },
 
     health: async (payload) => {
@@ -143,7 +143,7 @@ const updateDocument = (updateData) => {
                 reject(error);
             }
 
-            console.log(`SUBSCRIBE: Updated sensor document item => ${event.sensorUID}`);
+            console.log(`SUBSCRIBE: Updated sensor document item`);
             resolve(true);
         });
     });
