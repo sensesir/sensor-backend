@@ -29,6 +29,30 @@ subscribeEvents = async (payload) => {
         return {
             statusCode: 200,
             body: JSON.stringify('Successful boot event'),
+        };
+    }
+
+    if (payload.event === Constants.EVENT_BOOT) {
+        await Subscribe.boot(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify('Successful boot event')
+        };
+    }
+
+    if (payload.event === Constants.EVENT_OPEN || payload.event === Constants.EVENT_CLOSE) {
+        await Subscribe.doorStateChange(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify('Successful door state change')
+        }
+    }
+
+    if (payload.event === Constants.EVENT_RECONNECT) {
+        await Subscribe.reconnect(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify('Logged reconnection')
         }
     }
 }

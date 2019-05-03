@@ -1,0 +1,5 @@
+{
+    "sensorUID": "SensorJPDev",
+    "event": "boot",
+    "firmwareVersion": "0.2.0"
+}

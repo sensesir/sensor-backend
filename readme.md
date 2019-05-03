@@ -16,4 +16,13 @@ It functions as an interface between IoT Device gateway and DynamoDB.
  8. You can use the debugger of your choice - connect it to port 5858. Full command: `$ sam local invoke "GDoorSensorBackend" -e tests/first_boot_test.json --debug-port 5858`
  9. If you were running any other Docker containers with port 5858 open as a debug port, you may need to restart Docker. 
 
+**To deploy new code:**
+
+ 1. Upload a zipped file of the repo to the S3 bucket: *sensesir-code-store* | Recommend using CLI: `$ aws s3 cp local_file.zip s3://sensesir-code-store/sensor-backend/`
+ 2. In the Lambda management console, navigate to the *GDoorSensorBackend* function
+ 3. In the *Function code* section, use the `Code entry type` dropdown to select *"Upload a file from Amazon S3"*
+ 4. Click Save in the top right hand corner - this will 'deploy' the new code
+
  ## DynamoDB
+
+ 

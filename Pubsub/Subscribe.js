@@ -8,7 +8,7 @@
 const AWS = require("aws-sdk");
 AWS.config.update({
   region: "eu-west-1"
-  // endpoint: "http://localhost:8000"         // May need to change 
+  // endpoint: "http://localhost:8000"       
 });
 let docClient = new AWS.DynamoDB.DocumentClient()
 
@@ -16,25 +16,29 @@ const SENSOR_TABLE = "Sensors";
 const USERS_TABLE = "Users";
 
 module.exports = {
-    firstBoot: async (event) => {
-        console.log(`SUBSCRIBE: Updating record for first boot for sensor => ${event.sensorUID}`);
+    firstBoot: async (payload) => {
+        console.log(`SUBSCRIBE: Updating record for first boot for sensor => ${payload.sensorUID}`);
 
         const currentDate = new Date().toISOString();
         const update = {
             TableName: SENSOR_TABLE,
             Key: {
-                sensorUID: event.sensorUID
+                sensorUID: payload.sensorUID
             },
             UpdateExpression: `set firstBoot = :firstBoot, 
+                               lastPing= :lastPing,
                                firmwareVersion = :firmwareVersion, 
                                ip = :ip, 
                                lastBoot = :lastBoot,
+                               networkUp = :networkUp,
                                #ol = :ol`,
             ExpressionAttributeValues: {
+                ":lastPing": currentDate,
                 ":firstBoot": currentDate,
-                ":firmwareVersion": event.firmwareVersion,
-                ":ip": event.ip ? event.ip : "None",
+                ":firmwareVersion": payload.firmwareVersion,
+                ":ip": payload.ip ? payload.ip : "None",
                 ":lastBoot": currentDate,
+                ":networkUp": currentDate,
                 ":ol": true
             },
             ExpressionAttributeNames: {
@@ -43,16 +47,104 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        let result = await new Promise((resolve, reject) => {
-            docClient.update(update, (error, data) => {
-                if (error) {
-                    console.error(error);
-                    reject(error);
-                }
+        return await updateDocument(update);
+    },
 
-                console.log(`SUBSCRIBE: Updated first boot info for sensor ${event.sensorUID}`);
-                resolve(true);
-            });
-        });
+    boot: async (payload) => {
+        console.log(`SUBSCRIBE: Updating record for boot => ${payload.sensorUID}`);
+
+        const currentDate = new Date().toISOString();
+        const update = {
+            TableName: SENSOR_TABLE,
+            Key: {
+                sensorUID: payload.sensorUID
+            },
+            UpdateExpression: `set firmwareVersion = :firmwareVersion, 
+                               lastPing= :lastPing,
+                               ip = :ip, 
+                               lastBoot = :lastBoot,
+                               networkUp = :networkUp,
+                               #ol = :ol`,
+            ExpressionAttributeValues: {
+                ":lastPing": currentDate,
+                ":firmwareVersion": payload.firmwareVersion,
+                ":ip": payload.ip ? payload.ip : "None",
+                ":lastBoot": currentDate,
+                ":networkUp": currentDate,
+                ":ol": true
+            },
+            ExpressionAttributeNames: {
+                "#ol": "online"               
+            },
+            ReturnValues:"UPDATED_NEW"            
+        };
+
+        return await updateDocument(update);
+    },
+
+    doorStateChange: async (payload) => {
+        console.log(`SUBSCRIBE: Updating record for door ${newState} state => ${payload.sensorUID}`);
+
+        const currentDate = new Date().toISOString();
+        const update = {
+            TableName: SENSOR_TABLE,
+            Key: {
+                sensorUID: payload.sensorUID
+            },
+            UpdateExpression: `set lastPing= :lastPing, 
+                               doorState = :doorState`,
+            ExpressionAttributeValues: {
+                ":lastPing": currentDate,
+                ":doorState": payload.event === "open" ? "Open" : "Closed"            // Todo: Change this to constant
+            },
+            ReturnValues:"UPDATED_NEW"            
+        };
+
+        return await updateDocument(update);
+    },
+
+    reconnect: async (payload) => {
+        console.log(`SUBSCRIBE: Logging network reconnection`);
+
+        const currentDate = new Date().toISOString();
+        const update = {
+            TableName: SENSOR_TABLE,
+            Key: {
+                sensorUID: payload.sensorUID
+            },
+            UpdateExpression: `set lastPing= :lastPing, 
+                               reconnections = reconnections + increment`,
+            ExpressionAttributeValues: {
+                ":lastPing": currentDate,
+                ":increment": 1 
+            },
+            ReturnValues:"UPDATED_NEW"            
+        };
+
+        return await updateDocument(updateDocument);
+    },
+
+    health: async (payload) => {
+        console.log(`SUBSCRIBE: Logging health ping`);
+        // TODO: Decide what DB to send to
+    },
+
+    error: async (payload) => {
+        console.log(`SUBSCRIBE: Logging sensor error`);
+        // 
     }
+}
+
+const updateDocument = (updateData) => {
+    return new Promise((resolve, reject) => {
+        docClient.update(updateData, (error, data) => {
+            if (error) {
+                console.error(error);
+                reject(error);
+            }
+
+            console.log(`SUBSCRIBE: Updated sensor document item => ${event.sensorUID}`);
+            resolve(true);
+        });
+    });
 }
