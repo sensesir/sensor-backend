@@ -25,14 +25,22 @@ module.exports = {
             Key: {
                 sensorUID: event.sensorUID
             },
-            Item: {
-                firstBoot: currentDate,
-                firmwareVersion: event.firmwareVersion,
-                ip: event.ip ? event.ip : "None",
-                lastBoot: currentDate,
-                online: true,
-                sensorUID: event.sensorUID
-            }            
+            UpdateExpression: `set firstBoot = :firstBoot, 
+                               firmwareVersion = :firmwareVersion, 
+                               ip = :ip, 
+                               lastBoot = :lastBoot,
+                               #ol = :ol`,
+            ExpressionAttributeValues: {
+                ":firstBoot": currentDate,
+                ":firmwareVersion": event.firmwareVersion,
+                ":ip": event.ip ? event.ip : "None",
+                ":lastBoot": currentDate,
+                ":ol": true
+            },
+            ExpressionAttributeNames: {
+                "#ol": "online"               // Reqired because "online" keyword is reserved
+            },
+            ReturnValues:"UPDATED_NEW"            
         };
 
         let result = await new Promise((resolve, reject) => {

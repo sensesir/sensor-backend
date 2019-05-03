@@ -16,20 +16,19 @@ exports.handler = async (event) => {
     console.log(JSON.stringify(event));
 
     if (event.event) {
-        await subscribeEvents(event);
+        const res = await subscribeEvents(event);
+        return res;
     } else {
         // TODO
     }
-    
-    const response = {
-        statusCode: 200,
-        body: JSON.stringify('Hello from Lambda!'),
-    };
-    return response;
 };
 
 subscribeEvents = async (payload) => {
     if (payload.event === Constants.EVENT_FIRST_BOOT) {
         await Subscribe.firstBoot(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify('Successful boot event'),
+        }
     }
 }
