@@ -6,10 +6,7 @@
  */
 
 const AWS = require("aws-sdk");
-AWS.config.update({
-  region: "eu-west-1"
-  // endpoint: "http://localhost:8000"       
-});
+AWS.config.update({ region: process.env.AWS_REGION });
 let docClient = new AWS.DynamoDB.DocumentClient()
 
 const SENSOR_TABLE = "Sensors";
@@ -131,7 +128,7 @@ module.exports = {
 
     error: async (payload) => {
         console.log(`SUBSCRIBE: Logging sensor error`);
-        // 
+        // Create error field in dynamoDB (create like stack)
     }
 }
 
@@ -139,7 +136,6 @@ const updateDocument = (updateData) => {
     return new Promise((resolve, reject) => {
         docClient.update(updateData, (error, data) => {
             if (error) {
-                console.error(error);
                 reject(error);
             }
 

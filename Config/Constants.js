@@ -1,9 +1,14 @@
 module.exports = {
+    // Events
     EVENT_FIRST_BOOT:   "firstBoot",
     EVENT_BOOT:         "boot",
     EVENT_OPEN:         "open",
     EVENT_CLOSE:        "close",
     EVENT_HEALTH:       "health",
     EVENT_RECONNECT:    "reconnect",
-    EVENT_ERROR:        "error"
+    EVENT_ERROR:        "error",
+
+    // Commands
+    COMMAND_HEALTH:     "health",
+    COMMAND_ACTUATE:    "actuate"
 }

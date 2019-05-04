@@ -16,6 +16,10 @@ Resources:
       MemorySize: 1024
       Timeout: 200
       Role: 'arn:aws:iam::126281209629:role/service-role/SensorBackend'
+      Environment:
+        Variables:
+          IOT_ENDPOINT: 'anwaqu8y2zf77-ats.iot.eu-west-1.amazonaws.com'
+          AWS_REGION: 'eu-west-1'
       Events:
         IoTRule1:
           Type: IoTRule

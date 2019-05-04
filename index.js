@@ -8,19 +8,25 @@
  */
 
 const Constants = require('./Config/Constants');
-let Subscribe = require('./Pubsub/Subscribe');
+const Subscribe = require('./Pubsub/Subscribe');
+const Publish   = require('./Pubsub/Publish');
 
 exports.handler = async (event) => {
-    // Simple test 
-    console.log(`SENSOR BACKEND: New IoT event`);
-    console.log(JSON.stringify(event));
-
-    if (event.event) {
-        const res = await subscribeEvents(event);
-        return res;
-    } else {
-        // TODO
+    try {
+        if (event.event) {
+            const res = await subscribeEvents(event);
+            return res;
+        } else if (event.command) {
+            const res = await publishCommands(event);
+            return res;
+        } else {
+            throw new Error(`Unknown Lambda trigger: ${event}`);
+        }
+    } catch(error) {
+        console.error(error);
+        // Todo: Slack report of error (future will be more elaborate)
     }
+    
 };
 
 subscribeEvents = async (payload) => {
@@ -54,5 +60,47 @@ subscribeEvents = async (payload) => {
             statusCode: 200,
             body: JSON.stringify('Logged reconnection')
         }
+    }
+
+    if (payload.event === Constants.EVENT_HEALTH) {
+        await Subscribe.health(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify('Logged health ping')
+        }
+    }
+
+    if (payload.event === Constants.EVENT_ERROR) {
+        await Subscribe.error(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify('Logged sensor error')
+        }
+    }
+
+    else {
+        throw new Error(`Unhandled event type = ${payload.event}`);
+    }
+}
+
+publishCommands = async (payload) => {
+    if (payload.command === Constants.COMMAND_ACTUATE) {
+        await Publish.actuate(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify('Successfully sent actuate command')
+        }
+    }
+
+    if (payload.command === Constants.COMMAND_HEALTH) {
+        await Publish.health(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify('Successfully requested health ping')
+        }
+    }
+
+    else {
+        throw new Error(`Unknown publish command = ${payload.command}`);
     }
 }
