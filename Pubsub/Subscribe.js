@@ -6,7 +6,7 @@
  */
 
 const AWS = require("aws-sdk");
-AWS.config.update({ region: process.env.AWS_REGION });
+AWS.config.update({ region: process.env.IOT_REGION });
 let docClient = new AWS.DynamoDB.DocumentClient()
 
 const SENSOR_TABLE = "Sensors";

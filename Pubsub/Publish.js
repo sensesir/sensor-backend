@@ -7,7 +7,7 @@
 
 const Constants = require('../Config/Constants');
 const AWS = require('aws-sdk');
-AWS.config.update({ region: process.env.AWS_REGION });
+AWS.config.update({ region: process.env.IOT_REGION });
 const DeviceGateway = new AWS.IotData({endpoint: process.env.IOT_ENDPOINT});
 
 module.exports = {

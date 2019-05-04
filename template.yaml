@@ -19,9 +19,9 @@ Resources:
       Environment:
         Variables:
           IOT_ENDPOINT: 'anwaqu8y2zf77-ats.iot.eu-west-1.amazonaws.com'
-          AWS_REGION: 'eu-west-1'
+          IOT_REGION: 'eu-west-1'
       Events:
         IoTRule1:
           Type: IoTRule
           Properties:
-            Sql: 'SELECT * FROM "server/#"'
+            Sql: SELECT * FROM "server/eu-west-1.dev/event/#"
