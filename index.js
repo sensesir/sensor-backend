@@ -46,7 +46,7 @@ subscribeEvents = async (payload) => {
         };
     }
 
-    if (payload.event === Constants.EVENT_OPEN || payload.event === Constants.EVENT_CLOSE) {
+    if (payload.event === Constants.EVENT_DOOR_STATE) {
         await Subscribe.doorStateChange(payload);
         return {
             statusCode: 200,

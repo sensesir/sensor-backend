@@ -80,7 +80,7 @@ module.exports = {
     },
 
     doorStateChange: async (payload) => {
-        console.log(`SUBSCRIBE: Updating record for door ${payload.event} state => ${payload.sensorUID}`);
+        console.log(`SUBSCRIBE: Updating record for door ${payload.sensorUID}, new state => ${payload.state}`);
 
         const currentDate = new Date().toISOString();
         const update = {
@@ -92,7 +92,7 @@ module.exports = {
                                doorState = :doorState`,
             ExpressionAttributeValues: {
                 ":lastPing": currentDate,
-                ":doorState": payload.event === "open" ? "open" : "closed"
+                ":doorState": payload.state
             },
             ReturnValues:"UPDATED_NEW"            
         };
