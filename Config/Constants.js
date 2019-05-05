@@ -1,4 +1,11 @@
 module.exports = {
+    // Targets
+    TARGET_GDOOR:       "gdoor",
+
+    // Categories
+    CATEGORY_EVENT:     "event",
+    CATEGORY_COMMAND:   "command",
+
     // Events
     EVENT_FIRST_BOOT:   "firstBoot",
     EVENT_BOOT:         "boot",
