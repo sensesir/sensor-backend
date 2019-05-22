@@ -78,6 +78,14 @@ subscribeEvents = async (payload) => {
         }
     }
 
+    if (payload.event === Constants.EVENT_MQTT_CONN_FAILED) {
+        await Subscribe.mqttConnFailure(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify("Logged MQTT conn error")
+        }
+    }
+
     else {
         throw new Error(`Unhandled event type = ${payload.event}`);
     }

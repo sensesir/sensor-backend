@@ -8,9 +8,7 @@
 const AWS = require("aws-sdk");
 AWS.config.update({ region: process.env.IOT_REGION });
 let docClient = new AWS.DynamoDB.DocumentClient()
-
-const SENSOR_TABLE = "Sensors";
-const USERS_TABLE = "Users";
+const Constants = require('../Config/Constants');
 
 module.exports = {
     firstBoot: async (payload) => {
@@ -18,7 +16,7 @@ module.exports = {
 
         const currentDate = new Date().toISOString();
         const update = {
-            TableName: SENSOR_TABLE,
+            TableName: Constants.TABLE_SENSORS,
             Key: {
                 sensorUID: payload.sensorUID
             },
@@ -52,7 +50,7 @@ module.exports = {
 
         const currentDate = new Date().toISOString();
         const update = {
-            TableName: SENSOR_TABLE,
+            TableName: Constants.TABLE_SENSORS,
             Key: {
                 sensorUID: payload.sensorUID
             },
@@ -84,7 +82,7 @@ module.exports = {
 
         const currentDate = new Date().toISOString();
         const update = {
-            TableName: SENSOR_TABLE,
+            TableName: Constants.TABLE_SENSORS,
             Key: {
                 sensorUID: payload.sensorUID
             },
@@ -105,7 +103,7 @@ module.exports = {
 
         const currentDate = new Date().toISOString();
         const update = {
-            TableName: SENSOR_TABLE,
+            TableName: Constants.TABLE_SENSORS,
             Key: {
                 sensorUID: payload.sensorUID
             },
@@ -129,7 +127,39 @@ module.exports = {
     error: async (payload) => {
         console.log(`SUBSCRIBE: Logging sensor error`);
         // Create error field in dynamoDB (create like stack)
+    },
+
+    mqttConnFailure: async (payload) => {
+        console.log(`SUBSCRIBE: Logging MQTT connection failure`);
+
+        const currentDate = new Date().toISOString();
+        const newItem = {
+            TableName: Constants.TABLE_ERRORS,
+            Item: {
+                componentUID: payload.sensorUID,
+                component: "Sensor",
+                date: currentDate,
+                errorCode: "SS001",              // Todo: formalise
+                description: "MQTT conn failure",
+                open: true
+            }
+        }
+
+        return await createItem(newItem);
     }
+}
+
+const createItem = (itemData) => {
+    return new Promise((resolve, reject) => {
+        docClient.put(itemData, (error, data) =>{
+            if (error) {
+                reject(error);
+            }
+
+            console.log(`SUBSCRIBE: Created new item`);
+            resolve(true);
+        });
+    });
 }
 
 const updateDocument = (updateData) => {

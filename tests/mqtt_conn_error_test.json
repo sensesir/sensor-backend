@@ -1,0 +1,4 @@
+{
+    "sensorUID": "uuid-v4-goes-here",
+    "event": "mqttConFailure"
+}
