@@ -111,11 +111,16 @@ module.exports = {
             },
             UpdateExpression: `set lastPing= :lastPing, 
                                reconnections = reconnections + :addRecon,
-                               networkUp = :networkUp`,
+                               networkUp = :networkUp,
+                               #ol = :ol`,
             ExpressionAttributeValues: {
                 ":lastPing": currentDate,
                 ":addRecon": 1,
-                ":networkUp": currentDate 
+                ":networkUp": currentDate,
+                ":ol": true 
+            },
+            ExpressionAttributeNames: {
+                "#ol": "online"               
             },
             ReturnValues:"UPDATED_NEW"            
         };
