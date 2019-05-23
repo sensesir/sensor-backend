@@ -19,6 +19,7 @@ module.exports = {
     EVENT_RECONNECT:        "reconnect",
     EVENT_ERROR:            "error",
     EVENT_MQTT_CONN_FAILED: "mqttConFailure",
+    EVENT_DISCONNECT:       "disconnected", 
 
     // Commands
     COMMAND_HEALTH:     "health",

@@ -74,7 +74,9 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        return await updateDocument(update);
+        const bootUpateSuccess = await updateDocument(update);
+        const downtimeUpdateSuccess = await updateNetworkDownTime(payload.sensorUID);
+        return (bootUpateSuccess && downtimeUpdateSuccess);
     },
 
     doorStateChange: async (payload) => {
@@ -108,15 +110,19 @@ module.exports = {
                 sensorUID: payload.sensorUID
             },
             UpdateExpression: `set lastPing= :lastPing, 
-                               reconnections = reconnections + :addRecon`,
+                               reconnections = reconnections + :addRecon,
+                               networkUp = :networkUp`,
             ExpressionAttributeValues: {
                 ":lastPing": currentDate,
-                ":addRecon": 1 
+                ":addRecon": 1,
+                ":networkUp": currentDate 
             },
             ReturnValues:"UPDATED_NEW"            
         };
 
-        return await updateDocument(update);
+        const reconnUpateSuccess = await updateDocument(update);
+        const downtimeUpdateSuccess = await updateNetworkDownTime(payload.sensorUID);
+        return (reconnUpateSuccess && downtimeUpdateSuccess);
     },
 
     health: async (payload) => {
@@ -126,7 +132,7 @@ module.exports = {
 
     error: async (payload) => {
         console.log(`SUBSCRIBE: Logging sensor error`);
-        // Create error field in dynamoDB (create like stack)
+        // Todo
     },
 
     mqttConnFailure: async (payload) => {
@@ -146,6 +152,30 @@ module.exports = {
         }
 
         return await createItem(newItem);
+    },
+
+    disconnected: async (payload) => {
+        console.log(`SUBSCRIBE: Updating DB state for sensor disconnected event`);
+
+        const currentDate = new Date().toISOString();
+        const update = {
+            TableName: Constants.TABLE_SENSORS,
+            Key: {
+                sensorUID: payload.clientId // Aws generated event (uses different naming convention)
+            },
+            UpdateExpression: `set networkDown = :networkDown,
+                               #ol = :ol`,
+            ExpressionAttributeValues: {
+                ":networkDown": currentDate,
+                ":ol": false
+            },
+            ExpressionAttributeNames: {
+                "#ol": "online"               
+            },
+            ReturnValues:"UPDATED_NEW"            
+        };
+
+        return await updateDocument(update);
     }
 }
 
@@ -173,4 +203,59 @@ const updateDocument = (updateData) => {
             resolve(true);
         });
     });
+}
+
+const getItem = (identifiers) => {
+    return new Promise((resolve, reject) => {
+        docClient.get(identifiers, (error, data) => {
+            if (error) {
+                reject(error);
+            }
+            resolve(data.Item);
+        });
+    });
+}
+
+/**
+ * Function will attempt to update total network downtime 
+ * IFF there was a previous value to network downtime
+ * @param {String} sensorUID 
+ */
+
+const updateNetworkDownTime = async (sensorUID) => {
+    console.log(`SUBSCRIBE: Updating sensor downtime`);
+
+    const itemIdentifiers = {
+        TableName: Constants.TABLE_SENSORS,
+        Key: { sensorUID: sensorUID }
+    };
+
+    const itemData = await getItem(itemIdentifiers);
+    if (!itemData.networkDown) { 
+        console.warn(`SUBSCRIBE: No networkDown value`);
+        return; 
+    }
+
+    const lastDown = new Date(itemData.networkDown);
+    const lastUp   = new Date(itemData.networkUp);
+    const diffHrs  = (lastUp - lastDown)/3.6e6;
+    const roundedHrs = Math.round(diffHrs * 100) / 100; 
+    if (isNaN(roundedHrs)) { 
+        console.warn(`SUBSCRIBE: No networkDown value`);
+        return; 
+    }
+
+    const update = {
+        TableName: Constants.TABLE_SENSORS,
+        Key: {
+            sensorUID: sensorUID
+        },
+        UpdateExpression: `set downTime = downTime + :newDownTime`, 
+        ExpressionAttributeValues: {
+            ":newDownTime": roundedHrs,
+        },
+        ReturnValues:"UPDATED_NEW"            
+    };
+
+    return await updateDocument(update);
 }
