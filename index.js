@@ -13,7 +13,7 @@ const Publish   = require('./Pubsub/Publish');
 
 exports.handler = async (event) => {
     try {
-        if (event.event) {
+        if (event.event || event.eventType) {
             const res = await subscribeEvents(event);
             return res;
         } else if (event.command) {
@@ -75,6 +75,22 @@ subscribeEvents = async (payload) => {
         return {
             statusCode: 200,
             body: JSON.stringify('Logged sensor error')
+        }
+    }
+
+    if (payload.event === Constants.EVENT_MQTT_CONN_FAILED) {
+        await Subscribe.mqttConnFailure(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify("Logged MQTT conn error")
+        }
+    }
+
+    if (payload.eventType === Constants.EVENT_DISCONNECT) {
+        await Subscribe.disconnected(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify("Updated sensor data structure for disconnect event")
         }
     }
 
