@@ -13,14 +13,14 @@ const DeviceGateway = new AWS.IotData({endpoint: process.env.IOT_ENDPOINT});
 module.exports = {
     actuate: async (payload) => {
         const sensorUID = payload.sensorUID;
-        const topic = `${Constants.TARGET_GDOOR}/${sensorUID}/${Constants.CATEGORY_COMMAND}/${Constants.COMMAND_ACTUATE}`;
+        const topic = `${Constants.TARGET_GDOOR}/${sensorUID}/v${Constants.SENSOR_FIRMWARE_VERSION.charAt(0)}/${Constants.CATEGORY_COMMAND}/${Constants.COMMAND_ACTUATE}`;
         console.log(`PUBLISH: Publising to topic => ${topic}`);
         return await publishMessage(topic);
     },
 
     health: async (payload) => {
         const sensorUID = payload.sensorUID;
-        const topic = `${Constants.TARGET_GDOOR}/${sensorUID}/${Constants.CATEGORY_COMMAND}/${Constants.COMMAND_HEALTH}`;
+        const topic = `${Constants.TARGET_GDOOR}/${sensorUID}/v${Constants.SENSOR_FIRMWARE_VERSION.charAt(0)}/${Constants.CATEGORY_COMMAND}/${Constants.COMMAND_HEALTH}`;
         console.log(`PUBLISH: Publising to topic => ${topic}`);
         return await publishMessage(topic);
     }
