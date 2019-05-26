@@ -1,0 +1,6 @@
+{
+    "sensorUID": "SensorJPDev",
+    "event": "error",
+    "errorCode": "SS002",
+    "message": "Incorrect UID to target - SensorTFDev"
+}

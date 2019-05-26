@@ -7,7 +7,7 @@
 
 const AWS = require("aws-sdk");
 AWS.config.update({ region: process.env.IOT_REGION });
-let docClient = new AWS.DynamoDB.DocumentClient()
+let docClient = new AWS.DynamoDB.DocumentClient();
 const Constants  = require('../Config/Constants');
 const ErrorCodes = require("../Config/ErrorCodes");
 
@@ -249,8 +249,6 @@ const getItem = (identifiers) => {
  */
 
 const updateNetworkDownTime = async (sensorUID) => {
-    console.log(`SUBSCRIBE: Updating sensor downtime`);
-
     const itemIdentifiers = {
         TableName: Constants.TABLE_SENSORS,
         Key: { sensorUID: sensorUID }

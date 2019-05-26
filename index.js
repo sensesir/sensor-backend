@@ -10,6 +10,7 @@
 const Constants = require('./Config/Constants');
 const Subscribe = require('./Pubsub/Subscribe');
 const Publish   = require('./Pubsub/Publish');
+const Analytics = require('./Analytics/Analytics');
 
 exports.handler = async (event) => {
     try {
@@ -32,6 +33,7 @@ exports.handler = async (event) => {
 subscribeEvents = async (payload) => {
     if (payload.event === Constants.EVENT_FIRST_BOOT) {
         await Subscribe.firstBoot(payload);
+        await Analytics.logConnect(payload);
         return {
             statusCode: 200,
             body: JSON.stringify('Successful boot event'),
@@ -40,6 +42,7 @@ subscribeEvents = async (payload) => {
 
     if (payload.event === Constants.EVENT_BOOT) {
         await Subscribe.boot(payload);
+        await Analytics.logConnect(payload);
         return {
             statusCode: 200,
             body: JSON.stringify('Successful boot event')
@@ -56,6 +59,7 @@ subscribeEvents = async (payload) => {
 
     if (payload.event === Constants.EVENT_RECONNECT) {
         await Subscribe.reconnect(payload);
+        await Analytics.logReconnect(payload);
         return {
             statusCode: 200,
             body: JSON.stringify('Logged reconnection')
@@ -64,6 +68,7 @@ subscribeEvents = async (payload) => {
 
     if (payload.event === Constants.EVENT_HEALTH) {
         await Subscribe.health(payload);
+        await Analytics.logHealth(payload);
         return {
             statusCode: 200,
             body: JSON.stringify('Logged health ping')
@@ -88,6 +93,7 @@ subscribeEvents = async (payload) => {
 
     if (payload.eventType === Constants.EVENT_DISCONNECT) {
         await Subscribe.disconnected(payload);
+        await Analytics.logDisconnect(payload);
         return {
             statusCode: 200,
             body: JSON.stringify("Updated sensor data structure for disconnect event")
@@ -102,6 +108,7 @@ subscribeEvents = async (payload) => {
 publishCommands = async (payload) => {
     if (payload.command === Constants.COMMAND_ACTUATE) {
         await Publish.actuate(payload);
+        await Analytics.logActuate(payload);
         return {
             statusCode: 200,
             body: JSON.stringify('Successfully sent actuate command')

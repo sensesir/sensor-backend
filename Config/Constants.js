@@ -1,8 +1,9 @@
 module.exports = {
     // DynamoDB tables
-    TABLE_USERS:   "Users",
-    TABLE_SENSORS: "Sensors",
-    TABLE_ERRORS:  "ErrorLog",
+    TABLE_USERS:     "Users",
+    TABLE_SENSORS:   "Sensors",
+    TABLE_ERRORS:    "ErrorLog",
+    TABLE_ANALYTICS: "AnalyticEvents",
     
     // Components
     COMPONENT_SENSOR: "Sensor",
