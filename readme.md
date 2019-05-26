@@ -23,6 +23,24 @@ It functions as an interface between IoT Device gateway and DynamoDB.
  3. In the *Function code* section, use the `Code entry type` dropdown to select *"Upload a file from Amazon S3"*
  4. Click Save in the top right hand corner - this will 'deploy' the new code
 
- ## DynamoDB
+## API
+**Root Endpoint:** https://eu4nnl75bb.execute-api.eu-west-1.amazonaws.com/
+
+The sensor backend is configured to accept incoming API requests. This is to make this servers the interface to injecting messages into the AWS IoT MQTT message broker. Endpoints employ a schema to direct to `Prod` or `Dev` (see below). Current endpoints:
+
+  1. Command: Send a command to a specific sensor. Payload schema:
+  `{
+      sensorUID: uuid-v4
+      command: _command // (i.e. "actuate" or "health")
+   }`
+  2.  
+
+Example endpoint (full): https://eu4nnl75bb.execute-api.eu-west-1.amazonaws.com/dev/command
+
+### Security
+
+The API uses an api key for security, and this should be submitted as a header: `x-api-key`
+
+## DynamoDB
 
  

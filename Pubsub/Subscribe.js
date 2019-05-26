@@ -7,8 +7,9 @@
 
 const AWS = require("aws-sdk");
 AWS.config.update({ region: process.env.IOT_REGION });
-let docClient = new AWS.DynamoDB.DocumentClient()
-const Constants = require('../Config/Constants');
+let docClient = new AWS.DynamoDB.DocumentClient();
+const Constants  = require('../Config/Constants');
+const ErrorCodes = require("../Config/ErrorCodes");
 
 module.exports = {
     firstBoot: async (payload) => {
@@ -132,25 +133,57 @@ module.exports = {
 
     health: async (payload) => {
         console.log(`SUBSCRIBE: Logging health ping`);
-        // TODO: Decide what DB to send to
+        const currentDate = new Date().toISOString();
+        const update = {
+            TableName: Constants.TABLE_SENSORS,
+            Key: {
+                sensorUID: payload.sensorUID
+            },
+            UpdateExpression: `set lastPing= :lastPing, 
+                               #ol = :ol`,
+            ExpressionAttributeValues: {
+                ":lastPing": currentDate,
+                ":ol": true 
+            },
+            ExpressionAttributeNames: {
+                "#ol": "online"               
+            },
+            ReturnValues:"UPDATED_NEW"            
+        };
+
+        return await updateDocument(update);
     },
 
     error: async (payload) => {
         console.log(`SUBSCRIBE: Logging sensor error`);
-        // Todo
-    },
-
-    mqttConnFailure: async (payload) => {
-        console.log(`SUBSCRIBE: Logging MQTT connection failure`);
-
+        
         const currentDate = new Date().toISOString();
         const newItem = {
             TableName: Constants.TABLE_ERRORS,
             Item: {
                 componentUID: payload.sensorUID,
-                component: "Sensor",
+                component: Constants.COMPONENT_SENSOR,
                 date: currentDate,
-                errorCode: "SS001",              // Todo: formalise
+                errorCode: payload.errorCode,              
+                description: payload.message,
+                open: true
+            }
+        }
+
+        return await createItem(newItem);
+    },
+
+    mqttConnFailure: async (payload) => {
+        console.log(`SUBSCRIBE: Logging MQTT connection failure`);
+        
+        const currentDate = new Date().toISOString();
+        const newItem = {
+            TableName: Constants.TABLE_ERRORS,
+            Item: {
+                componentUID: payload.sensorUID,
+                component: Constants.COMPONENT_SENSOR,
+                date: currentDate,
+                errorCode: ErrorCodes.ERROR_SENSOR_MQTT_CONN,              
                 description: "MQTT conn failure",
                 open: true
             }
@@ -161,6 +194,12 @@ module.exports = {
 
     disconnected: async (payload) => {
         console.log(`SUBSCRIBE: Updating DB state for sensor disconnected event`);
+
+        // Ignore IoT console events - we only want sensor disconnect events
+        if (!isSensor(payload)) {
+            console.log('SUBSCRIBE: Ignoring console disconnect');
+            return true;
+        }
 
         const currentDate = new Date().toISOString();
         const update = {
@@ -228,8 +267,6 @@ const getItem = (identifiers) => {
  */
 
 const updateNetworkDownTime = async (sensorUID) => {
-    console.log(`SUBSCRIBE: Updating sensor downtime`);
-
     const itemIdentifiers = {
         TableName: Constants.TABLE_SENSORS,
         Key: { sensorUID: sensorUID }
@@ -263,4 +300,13 @@ const updateNetworkDownTime = async (sensorUID) => {
     };
 
     return await updateDocument(update);
+}
+
+const isSensor = (payload) => {
+    const iotConsolePrefix = payload.clientId.split("-")[0];
+    if (iotConsolePrefix === Constants.IOT_CONSOLE_PREFIX) {
+        return false;
+    }
+
+    return true;
 }

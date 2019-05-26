@@ -11,18 +11,18 @@ AWS.config.update({ region: process.env.IOT_REGION });
 const DeviceGateway = new AWS.IotData({endpoint: process.env.IOT_ENDPOINT});
 
 module.exports = {
-    actuate: async (payload) => {
-        const sensorUID = payload.sensorUID;
-        const topic = `${Constants.TARGET_GDOOR}/${sensorUID}/${Constants.CATEGORY_COMMAND}/${Constants.COMMAND_ACTUATE}`;
+    actuate: async (data) => {
+        const topic = `${Constants.TARGET_GDOOR}/${data.sensorUID}/v${Constants.SENSOR_FIRMWARE_VERSION.charAt(0)}/${Constants.CATEGORY_COMMAND}/${Constants.COMMAND_ACTUATE}`;
+        const payload = { sensorUID: data.sensorUID }
         console.log(`PUBLISH: Publising to topic => ${topic}`);
-        return await publishMessage(topic);
+        return await publishMessage(topic, payload);
     },
 
-    health: async (payload) => {
-        const sensorUID = payload.sensorUID;
-        const topic = `${Constants.TARGET_GDOOR}/${sensorUID}/${Constants.CATEGORY_COMMAND}/${Constants.COMMAND_HEALTH}`;
+    health: async (data) => {
+        const topic = `${Constants.TARGET_GDOOR}/${data.sensorUID}/v${Constants.SENSOR_FIRMWARE_VERSION.charAt(0)}/${Constants.CATEGORY_COMMAND}/${Constants.COMMAND_HEALTH}`;
+        const payload = { sensorUID: data.sensorUID }
         console.log(`PUBLISH: Publising to topic => ${topic}`);
-        return await publishMessage(topic);
+        return await publishMessage(topic, payload);
     }
 }
 

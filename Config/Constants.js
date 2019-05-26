@@ -1,11 +1,18 @@
 module.exports = {
     // DynamoDB tables
-    TABLE_USERS:   "Users",
-    TABLE_SENSORS: "Sensors",
-    TABLE_ERRORS:  "ErrorLog",
+    TABLE_USERS:     "Users",
+    TABLE_SENSORS:   "Sensors",
+    TABLE_ERRORS:    "ErrorLog",
+    TABLE_ANALYTICS: "AnalyticEvents",
     
+    // Components
+    COMPONENT_SENSOR: "Sensor",
+    COMPONENT_BACKEND: "Backend",
+    COMPONENT_CLIENT: "Client",
+
     // Targets
     TARGET_GDOOR: "gdoor",
+    SENSOR_FIRMWARE_VERSION: "0.3.0",
 
     // Categories
     CATEGORY_EVENT:   "event",
@@ -23,5 +30,8 @@ module.exports = {
 
     // Commands
     COMMAND_HEALTH:     "health",
-    COMMAND_ACTUATE:    "actuate"
+    COMMAND_ACTUATE:    "actuate",
+
+    // Misc
+    IOT_CONSOLE_PREFIX: "iotconsole"
 }
