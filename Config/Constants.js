@@ -24,5 +24,8 @@ module.exports = {
 
     // Commands
     COMMAND_HEALTH:     "health",
-    COMMAND_ACTUATE:    "actuate"
+    COMMAND_ACTUATE:    "actuate",
+
+    // Misc
+    IOT_CONSOLE_PREFIX: "iotconsole"
 }

@@ -162,6 +162,12 @@ module.exports = {
     disconnected: async (payload) => {
         console.log(`SUBSCRIBE: Updating DB state for sensor disconnected event`);
 
+        // Ignore IoT console events - we only want sensor disconnect events
+        if (!isSensor(payload)) {
+            console.log('SUBSCRIBE: Ignoring console disconnect');
+            return true;
+        }
+
         const currentDate = new Date().toISOString();
         const update = {
             TableName: Constants.TABLE_SENSORS,
@@ -263,4 +269,13 @@ const updateNetworkDownTime = async (sensorUID) => {
     };
 
     return await updateDocument(update);
+}
+
+const isSensor = (payload) => {
+    const iotConsolePrefix = payload.clientId.split("-")[0];
+    if (iotConsolePrefix === Constants.IOT_CONSOLE_PREFIX) {
+        return false;
+    }
+
+    return true;
 }
