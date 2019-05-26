@@ -4,6 +4,11 @@ module.exports = {
     TABLE_SENSORS: "Sensors",
     TABLE_ERRORS:  "ErrorLog",
     
+    // Components
+    COMPONENT_SENSOR: "Sensor",
+    COMPONENT_BACKEND: "Backend",
+    COMPONENT_CLIENT: "Client",
+
     // Targets
     TARGET_GDOOR: "gdoor",
     SENSOR_FIRMWARE_VERSION: "0.3.0",

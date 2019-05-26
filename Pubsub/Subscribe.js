@@ -8,7 +8,8 @@
 const AWS = require("aws-sdk");
 AWS.config.update({ region: process.env.IOT_REGION });
 let docClient = new AWS.DynamoDB.DocumentClient()
-const Constants = require('../Config/Constants');
+const Constants  = require('../Config/Constants');
+const ErrorCodes = require("../Config/ErrorCodes");
 
 module.exports = {
     firstBoot: async (payload) => {
@@ -137,20 +138,34 @@ module.exports = {
 
     error: async (payload) => {
         console.log(`SUBSCRIBE: Logging sensor error`);
-        // Todo
-    },
-
-    mqttConnFailure: async (payload) => {
-        console.log(`SUBSCRIBE: Logging MQTT connection failure`);
-
+        
         const currentDate = new Date().toISOString();
         const newItem = {
             TableName: Constants.TABLE_ERRORS,
             Item: {
                 componentUID: payload.sensorUID,
-                component: "Sensor",
+                component: Constants.COMPONENT_SENSOR,
                 date: currentDate,
-                errorCode: "SS001",              // Todo: formalise
+                errorCode: payload.errorCode,              
+                description: payload.message,
+                open: true
+            }
+        }
+
+        return await createItem(newItem);
+    },
+
+    mqttConnFailure: async (payload) => {
+        console.log(`SUBSCRIBE: Logging MQTT connection failure`);
+        
+        const currentDate = new Date().toISOString();
+        const newItem = {
+            TableName: Constants.TABLE_ERRORS,
+            Item: {
+                componentUID: payload.sensorUID,
+                component: Constants.COMPONENT_SENSOR,
+                date: currentDate,
+                errorCode: ErrorCodes.ERROR_SENSOR_MQTT_CONN,              
                 description: "MQTT conn failure",
                 open: true
             }
