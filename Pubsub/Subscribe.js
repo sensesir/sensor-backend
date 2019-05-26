@@ -133,7 +133,25 @@ module.exports = {
 
     health: async (payload) => {
         console.log(`SUBSCRIBE: Logging health ping`);
-        // TODO: Decide what DB to send to
+        const currentDate = new Date().toISOString();
+        const update = {
+            TableName: Constants.TABLE_SENSORS,
+            Key: {
+                sensorUID: payload.sensorUID
+            },
+            UpdateExpression: `set lastPing= :lastPing, 
+                               #ol = :ol`,
+            ExpressionAttributeValues: {
+                ":lastPing": currentDate,
+                ":ol": true 
+            },
+            ExpressionAttributeNames: {
+                "#ol": "online"               
+            },
+            ReturnValues:"UPDATED_NEW"            
+        };
+
+        return await updateDocument(update);
     },
 
     error: async (payload) => {

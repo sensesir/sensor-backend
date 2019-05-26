@@ -37,6 +37,10 @@ The sensor backend is configured to accept incoming API requests. This is to mak
 
 Example endpoint (full): https://eu4nnl75bb.execute-api.eu-west-1.amazonaws.com/dev/command
 
+### Security
+
+The API uses an api key for security, and this should be submitted as a header: `x-api-key`
+
 ## DynamoDB
 
  
