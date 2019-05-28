@@ -33,5 +33,6 @@ module.exports = {
     COMMAND_ACTUATE:    "actuate",
 
     // Misc
-    IOT_CONSOLE_PREFIX: "iotconsole"
+    IOT_CONSOLE_PREFIX: "iotconsole",
+    SLACK_WEBHOOK: "https://hooks.slack.com/services/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"
 }
