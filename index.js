@@ -11,6 +11,7 @@ const Constants = require('./Config/Constants');
 const Subscribe = require('./Pubsub/Subscribe');
 const Publish   = require('./Pubsub/Publish');
 const Analytics = require('./Analytics/Analytics');
+const Api       = require("./Api/Api");
 
 exports.handler = async (event) => {
     try {
@@ -20,6 +21,9 @@ exports.handler = async (event) => {
         } else if (event.command) {
             const res = await publishCommands(event);
             return res;
+        } else if (event.request) {
+            const res = Api.getNetworkState(event.sensorUID);
+            return res;
         } else {
             throw new Error(`Unknown Lambda trigger: ${event}`);
         }
@@ -27,7 +31,6 @@ exports.handler = async (event) => {
         console.error(error);
         // Todo: Slack report of error (future will be more elaborate)
     }
-    
 };
 
 subscribeEvents = async (payload) => {
