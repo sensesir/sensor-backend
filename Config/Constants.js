@@ -12,7 +12,7 @@ module.exports = {
 
     // Targets
     TARGET_GDOOR: "gdoor",
-    SENSOR_FIRMWARE_VERSION: "0.3.0",
+    SENSOR_FIRMWARE_VERSION: "1.0.0",
 
     // Categories
     CATEGORY_EVENT:   "event",
