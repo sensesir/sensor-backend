@@ -7,10 +7,12 @@
  * Created: 04/18/2019
  */
 
+const axios     = require('axios');
 const Constants = require('./Config/Constants');
 const Subscribe = require('./Pubsub/Subscribe');
 const Publish   = require('./Pubsub/Publish');
 const Analytics = require('./Analytics/Analytics');
+const Api       = require("./Api/Api");
 
 exports.handler = async (event) => {
     try {
@@ -20,14 +22,17 @@ exports.handler = async (event) => {
         } else if (event.command) {
             const res = await publishCommands(event);
             return res;
+        } else if (event.request) {
+            const res = await Api.getNetworkState(event.sensorUID);
+            return res;
         } else {
-            throw new Error(`Unknown Lambda trigger: ${event}`);
+            throw new Error(`Unknown Lambda trigger: ${JSON.stringify(event)}`);
         }
     } catch(error) {
         console.error(error);
-        // Todo: Slack report of error (future will be more elaborate)
+        let res = await logErroInSlack(error);
+        return res;
     }
-    
 };
 
 subscribeEvents = async (payload) => {
@@ -126,4 +131,22 @@ publishCommands = async (payload) => {
     else {
         throw new Error(`Unknown publish command = ${payload.command}`);
     }
+}
+
+logErroInSlack = async (error) => {
+    console.log(`INDEX: Logging error in Slack`);
+    return await axios.post(Constants.SLACK_WEBHOOK, {
+        text: `*Error*: ${error.message} \n*Stack*: ${error.stack}`
+    })
+    .then(res => { 
+        return {
+            statusCode: 500,
+            message: error.message
+        } 
+    }).catch(error => {
+        return {
+            statusCode: 500,
+            message: "Fatal failure - failed to log error"
+        } 
+    });
 }

@@ -38,6 +38,11 @@ module.exports = {
     },
 
     logDisconnect: async (data) => {
+        if (!isSensor(data)) {
+            console.log("ANALYTICS: Ignoring IoT console disconnect event.");
+            return true;
+        }
+
         console.log(`ANALYTICS: Logging disconnect event`);
         const currentDate = new Date().toISOString();
         return await logEvent(data.clientId, Constants.COMPONENT_SENSOR, currentDate, Constants.EVENT_DISCONNECT);
@@ -74,4 +79,13 @@ const createItem = (itemData) => {
             resolve(true);
         });
     });
+}
+
+const isSensor = (payload) => {
+    const iotConsolePrefix = payload.clientId.split("-")[0];
+    if (iotConsolePrefix === Constants.IOT_CONSOLE_PREFIX) {
+        return false;
+    }
+
+    return true;
 }

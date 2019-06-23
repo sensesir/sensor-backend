@@ -14,8 +14,20 @@ const ErrorCodes = require("../Config/ErrorCodes");
 module.exports = {
     firstBoot: async (payload) => {
         console.log(`SUBSCRIBE: Updating record for first boot for sensor => ${payload.sensorUID}`);
-
         const currentDate = new Date().toISOString();
+
+        // Assess whether the sensor data item exists yet
+        const itemIdentifiers = {
+            TableName: Constants.TABLE_SENSORS,
+            Key: { sensorUID: payload.sensorUID }
+        }
+
+        let sensorDataExists = await itemExists(itemIdentifiers);
+        if (!sensorDataExists) {
+            console.log(`SUBSCRIBE: Sensor item not yet created, creating`);
+            await createTemplateSensorItem(payload.sensorUID);
+        }
+
         const update = {
             TableName: Constants.TABLE_SENSORS,
             Key: {
@@ -260,6 +272,20 @@ const getItem = (identifiers) => {
     });
 }
 
+const itemExists = (identifiers) => {
+    return new Promise((resolve, reject) => {
+        docClient.get(identifiers, (error, data) => {
+            if (error) {
+                return reject(error);
+            } else if (!data.Item) {
+                return resolve(false);
+            } else {
+                return resolve(true);
+            }
+        });
+    });
+}
+
 /**
  * Function will attempt to update total network downtime 
  * IFF there was a previous value to network downtime
@@ -309,4 +335,31 @@ const isSensor = (payload) => {
     }
 
     return true;
+}
+
+const createTemplateSensorItem = async (sensorUID) => {
+    const sensorDataTemplate = {
+        doorCloseCommands: 0,
+        doorOpenCommands: 0,
+        doorState: "unknown",
+        downTime: 0,
+        firmwareVersion: "None",
+        firstBoot: "None",
+        ip: "None",
+        lastBoot: "None",
+        lastPing: "None",
+        networkDown: "None",
+        networkUp: "None",
+        online: false,
+        reconnections: 0,
+        sensorUID: sensorUID,
+        userUID: "None"
+    }
+
+    const itemData = {
+        TableName: Constants.TABLE_SENSORS,
+        Item: sensorDataTemplate
+    }
+
+    return await createItem(itemData);
 }
