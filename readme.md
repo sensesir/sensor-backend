@@ -18,10 +18,11 @@ It functions as an interface between IoT Device gateway and DynamoDB.
 
 **To deploy new code:**
 
- 1. Upload a zipped file of the repo to the S3 bucket: *sensesir-code-store* | Recommend using CLI: `$ aws s3 cp local_file.zip s3://sensesir-code-store/sensor-backend/`
- 2. In the Lambda management console, navigate to the *GDoorSensorBackend* function
- 3. In the *Function code* section, use the `Code entry type` dropdown to select *"Upload a file from Amazon S3"*
- 4. Click Save in the top right hand corner - this will 'deploy' the new code
+ 1. Upload a zipped file of the repo to the S3 bucket: *sensesir-code-store* | Recommend using CLI: `$ aws s3 cp local_file.zip s3://sensesir-code-store/sensor-backend/` 
+ 2. Or for production: `$ aws s3 cp local_file-prod.zip s3://sensesir-code-store-prod/sensor-backend/` 
+ 3. In the Lambda management console, navigate to the *GDoorSensorBackend* function
+ 4. In the *Function code* section, use the `Code entry type` dropdown to select *"Upload a file from Amazon S3"*
+ 5. Click Save in the top right hand corner - this will 'deploy' the new code
 
 ## API
 **Root Endpoint:** https://eu4nnl75bb.execute-api.eu-west-1.amazonaws.com/
