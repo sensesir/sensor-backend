@@ -27,15 +27,7 @@ module.exports = {
     },
 
     doorStateChange: async (sensorUID) => {
-        // Get the user's UID
-        const itemIdentifiers = {
-            TableName: Constants.TABLE_SENSORS,
-            Key: { sensorUID: sensorUID }
-        };
-
-        let sensorData = await getItem(itemIdentifiers);
-        let userUID = sensorData.userUID;
-
+        let userUID = await getUserFromSensorUID(sensorUID);
         if (!userUID) {
             console.warn("Tried to update sensor state without a user profile linked to a sensor");
             return true;
@@ -48,7 +40,51 @@ module.exports = {
         }
         console.log(`PUBLISH: Publishing to topic => ${topic}`);
         return await publishMessage(topic, payload);
+    },
+
+    sensorDisconnnect: async (sensorUID) => {
+        let userUID = await getUserFromSensorUID(sensorUID);
+        if (!userUID) {
+            console.warn("Tried to update sensor state without a user profile linked to a sensor");
+            return true;
+        }
+
+        const topic = `${Constants.TARGET_MOBILE_CLIENT}/${userUID}/v${Constants.MOBILE_CLIENT_SOFTWARE_VERSION.charAt(0)}/${Constants.CATEGORY_EVENT}/${Constants.EVENT_DISCONNECT}`;
+        const payload = {
+            userUID: userUID,
+            event: Constants.EVENT_DISCONNECT
+        }
+        console.log(`PUBLISH: Publishing to topic => ${topic}`);
+        return await publishMessage(topic, payload);
+    },
+
+    sensorConnected: async (sensorUID) => {
+        let userUID = await getUserFromSensorUID(sensorUID);
+        if (!userUID) {
+            console.warn("Tried to update sensor state without a user profile linked to a sensor");
+            return true;
+        }
+
+        const topic = `${Constants.TARGET_MOBILE_CLIENT}/${userUID}/v${Constants.MOBILE_CLIENT_SOFTWARE_VERSION.charAt(0)}/${Constants.CATEGORY_EVENT}/${Constants.EVENT_CONNECT}`;
+        const payload = {
+            userUID: userUID,
+            event: Constants.EVENT_CONNECT
+        }
+        console.log(`PUBLISH: Publishing to topic => ${topic}`);
+        return await publishMessage(topic, payload);
     }
+}
+
+const getUserFromSensorUID = async (sensorUID) => {
+    // Get the user's UID
+    const itemIdentifiers = {
+        TableName: Constants.TABLE_SENSORS,
+        Key: { sensorUID: sensorUID }
+    };
+
+    let sensorData = await getItem(itemIdentifiers);
+    let userUID = sensorData.userUID;
+    return userUID;
 }
 
 const publishMessage = async (topic, payload={}) => {
@@ -72,7 +108,7 @@ const getItem = (identifiers) => {
     return new Promise((resolve, reject) => {
         docClient.get(identifiers, (error, data) => {
             if (error) {
-                reject(error);
+                return reject(error);
             }
             resolve(data.Item);
         });

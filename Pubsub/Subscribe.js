@@ -88,9 +88,11 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        const bootUpateSuccess = await updateDocument(update);
-        const downtimeUpdateSuccess = await updateNetworkDownTime(payload.sensorUID);
-        return (bootUpateSuccess && downtimeUpdateSuccess);
+        // Any of the three will throw on error
+        await updateDocument(update);
+        await Publish.sensorConnected(payload.sensorUID);
+        await updateNetworkDownTime(payload.sensorUID);
+        return true
     },
 
     doorStateChange: async (payload) => {
@@ -142,9 +144,9 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        const reconnUpateSuccess = await updateDocument(update);
-        const downtimeUpdateSuccess = await updateNetworkDownTime(payload.sensorUID);
-        return (reconnUpateSuccess && downtimeUpdateSuccess);
+        await updateDocument(update);
+        await Publish.sensorConnected(payload.sensorUID);
+        await updateNetworkDownTime(payload.sensorUID);
     },
 
     health: async (payload) => {
@@ -235,7 +237,8 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        return await updateDocument(update);
+        await updateDocument(update);
+        await Publish.sensorDisconnnect(payload.clientId);
     }
 }
 
