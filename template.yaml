@@ -20,6 +20,7 @@ Resources:
         Variables:
           IOT_ENDPOINT: 'anwaqu8y2zf77-ats.iot.eu-west-1.amazonaws.com'
           IOT_REGION: 'eu-west-1'
+          SLACK_WEBHOOK: 'https://hooks.slack.com/services/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'
       Events:
         IoTRule1:
           Type: IoTRule
