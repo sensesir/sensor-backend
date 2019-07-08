@@ -9,6 +9,7 @@ const Constants = require('../Config/Constants');
 const AWS = require('aws-sdk');
 AWS.config.update({ region: process.env.IOT_REGION });
 const DeviceGateway = new AWS.IotData({endpoint: process.env.IOT_ENDPOINT});
+const docClient = new AWS.DynamoDB.DocumentClient();
 
 module.exports = {
     actuate: async (data) => {
@@ -20,10 +21,70 @@ module.exports = {
 
     health: async (data) => {
         const topic = `${Constants.TARGET_GDOOR}/${data.sensorUID}/v${Constants.SENSOR_FIRMWARE_VERSION.charAt(0)}/${Constants.CATEGORY_COMMAND}/${Constants.COMMAND_HEALTH}`;
-        const payload = { sensorUID: data.sensorUID }
+        const payload = { sensorUID: data.sensorUID };
         console.log(`PUBLISH: Publising to topic => ${topic}`);
         return await publishMessage(topic, payload);
+    },
+
+    doorStateChange: async (sensorUID) => {
+        let userUID = await getUserFromSensorUID(sensorUID);
+        if (!userUID) {
+            console.warn("Tried to update sensor state without a user profile linked to a sensor");
+            return true;
+        }
+
+        const topic = `${Constants.TARGET_MOBILE_CLIENT}/${userUID}/v${Constants.MOBILE_CLIENT_SOFTWARE_VERSION.charAt(0)}/${Constants.CATEGORY_EVENT}/${Constants.EVENT_DOOR_STATE}`;
+        const payload = {
+            userUID: userUID,
+            event: Constants.EVENT_DOOR_STATE
+        }
+        console.log(`PUBLISH: Publishing to topic => ${topic}`);
+        return await publishMessage(topic, payload);
+    },
+
+    sensorDisconnnect: async (sensorUID) => {
+        let userUID = await getUserFromSensorUID(sensorUID);
+        if (!userUID) {
+            console.warn("Tried to update sensor state without a user profile linked to a sensor");
+            return true;
+        }
+
+        const topic = `${Constants.TARGET_MOBILE_CLIENT}/${userUID}/v${Constants.MOBILE_CLIENT_SOFTWARE_VERSION.charAt(0)}/${Constants.CATEGORY_EVENT}/${Constants.EVENT_DISCONNECT}`;
+        const payload = {
+            userUID: userUID,
+            event: Constants.EVENT_DISCONNECT
+        }
+        console.log(`PUBLISH: Publishing to topic => ${topic}`);
+        return await publishMessage(topic, payload);
+    },
+
+    sensorConnected: async (sensorUID) => {
+        let userUID = await getUserFromSensorUID(sensorUID);
+        if (!userUID) {
+            console.warn("Tried to update sensor state without a user profile linked to a sensor");
+            return true;
+        }
+
+        const topic = `${Constants.TARGET_MOBILE_CLIENT}/${userUID}/v${Constants.MOBILE_CLIENT_SOFTWARE_VERSION.charAt(0)}/${Constants.CATEGORY_EVENT}/${Constants.EVENT_CONNECT}`;
+        const payload = {
+            userUID: userUID,
+            event: Constants.EVENT_CONNECT
+        }
+        console.log(`PUBLISH: Publishing to topic => ${topic}`);
+        return await publishMessage(topic, payload);
     }
+}
+
+const getUserFromSensorUID = async (sensorUID) => {
+    // Get the user's UID
+    const itemIdentifiers = {
+        TableName: Constants.TABLE_SENSORS,
+        Key: { sensorUID: sensorUID }
+    };
+
+    let sensorData = await getItem(itemIdentifiers);
+    let userUID = sensorData.userUID;
+    return userUID;
 }
 
 const publishMessage = async (topic, payload={}) => {
@@ -39,6 +100,17 @@ const publishMessage = async (topic, payload={}) => {
                 reject(error);
             } 
             resolve(data);
+        });
+    });
+}
+
+const getItem = (identifiers) => {
+    return new Promise((resolve, reject) => {
+        docClient.get(identifiers, (error, data) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(data.Item);
         });
     });
 }

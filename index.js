@@ -135,7 +135,7 @@ publishCommands = async (payload) => {
 
 logErroInSlack = async (error) => {
     console.log(`INDEX: Logging error in Slack`);
-    return await axios.post(Constants.SLACK_WEBHOOK, {
+    return await axios.post(process.env.SLACK_WEBHOOK, {
         text: `*Error*: ${error.message} \n*Stack*: ${error.stack}`
     })
     .then(res => { 

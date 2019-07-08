@@ -82,8 +82,15 @@ const createItem = (itemData) => {
 }
 
 const isSensor = (payload) => {
+    // Check for console
     const iotConsolePrefix = payload.clientId.split("-")[0];
     if (iotConsolePrefix === Constants.IOT_CONSOLE_PREFIX) {
+        return false;
+    }
+
+    // Check for mobile client
+    const mobileClientPrefix = payload.clientId.split(":")[0];
+    if (mobileClientPrefix == Constants.MOBILE_CLIENT_PREFIX) {
         return false;
     }
 

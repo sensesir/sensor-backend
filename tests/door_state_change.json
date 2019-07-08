@@ -1,4 +1,5 @@
 {
     "sensorUID": "SensorJPDev",
-    "event": "close"
+    "event": "doorStateChange",
+    "state": "closed"
 }

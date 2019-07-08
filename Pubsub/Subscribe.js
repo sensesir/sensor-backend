@@ -8,6 +8,7 @@
 const AWS = require("aws-sdk");
 AWS.config.update({ region: process.env.IOT_REGION });
 let docClient = new AWS.DynamoDB.DocumentClient();
+const Publish = require('./Publish');
 const Constants  = require('../Config/Constants');
 const ErrorCodes = require("../Config/ErrorCodes");
 
@@ -87,9 +88,11 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        const bootUpateSuccess = await updateDocument(update);
-        const downtimeUpdateSuccess = await updateNetworkDownTime(payload.sensorUID);
-        return (bootUpateSuccess && downtimeUpdateSuccess);
+        // Any of the three will throw on error
+        await updateDocument(update);
+        await Publish.sensorConnected(payload.sensorUID);
+        await updateNetworkDownTime(payload.sensorUID);
+        return true
     },
 
     doorStateChange: async (payload) => {
@@ -110,7 +113,10 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        return await updateDocument(update);
+        // Will throw if there's an error
+        await updateDocument(update);
+        await Publish.doorStateChange(payload.sensorUID);
+        return true;
     },
 
     reconnect: async (payload) => {
@@ -138,9 +144,9 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        const reconnUpateSuccess = await updateDocument(update);
-        const downtimeUpdateSuccess = await updateNetworkDownTime(payload.sensorUID);
-        return (reconnUpateSuccess && downtimeUpdateSuccess);
+        await updateDocument(update);
+        await Publish.sensorConnected(payload.sensorUID);
+        await updateNetworkDownTime(payload.sensorUID);
     },
 
     health: async (payload) => {
@@ -231,7 +237,8 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        return await updateDocument(update);
+        await updateDocument(update);
+        await Publish.sensorDisconnnect(payload.clientId);
     }
 }
 
@@ -329,8 +336,15 @@ const updateNetworkDownTime = async (sensorUID) => {
 }
 
 const isSensor = (payload) => {
+    // Check for IOT console
     const iotConsolePrefix = payload.clientId.split("-")[0];
     if (iotConsolePrefix === Constants.IOT_CONSOLE_PREFIX) {
+        return false;
+    }  
+    
+    // Check for mobile client
+    const mobileClientPrefix = payload.clientId.split(":")[0];
+    if (mobileClientPrefix == Constants.MOBILE_CLIENT_PREFIX) {
         return false;
     }
 
