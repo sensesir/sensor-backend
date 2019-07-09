@@ -13,7 +13,7 @@ module.exports = {
     // Targets
     TARGET_GDOOR: "gdoor",
     TARGET_MOBILE_CLIENT: "mobileClient",
-    MOBILE_CLIENT_SOFTWARE_VERSION: "0.4.0",
+    MOBILE_CLIENT_SOFTWARE_VERSION: "1.0.0",
     SENSOR_FIRMWARE_VERSION: "1.0.0",
 
     // Categories
