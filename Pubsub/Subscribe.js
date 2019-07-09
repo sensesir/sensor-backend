@@ -202,7 +202,8 @@ module.exports = {
                 component: Constants.COMPONENT_SENSOR,
                 date: currentDate,
                 errorCode: ErrorCodes.ERROR_SENSOR_MQTT_CONN,              
-                description: "MQTT conn failure"
+                description: "MQTT conn failure",
+                open: true
             }
         }
 
