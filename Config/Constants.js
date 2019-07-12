@@ -4,7 +4,11 @@ module.exports = {
     TABLE_SENSORS:   "Sensors",
     TABLE_ERRORS:    "ErrorLog",
     TABLE_ANALYTICS: "AnalyticEvents",
+    TABLE_FIRMWARE_DISTRIBUTIONS: "FirmwareDistributions",
     
+    // S3 Buckets
+    BUCKET_FIRMWARE_BINARIES: "sensesir-firmware-releases",
+
     // Components
     COMPONENT_SENSOR: "Sensor",
     COMPONENT_BACKEND: "Backend",
@@ -34,6 +38,9 @@ module.exports = {
     // Commands
     COMMAND_HEALTH:     "health",
     COMMAND_ACTUATE:    "actuate",
+
+    // Endpoints
+    ENDPOINT_OTA_UPDATE:  "/otaUpdate",
 
     // Misc
     IOT_CONSOLE_PREFIX: "iotconsole",

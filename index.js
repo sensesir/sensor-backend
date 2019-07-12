@@ -13,8 +13,9 @@ const Subscribe = require('./Pubsub/Subscribe');
 const Publish   = require('./Pubsub/Publish');
 const Analytics = require('./Analytics/Analytics');
 const Api       = require("./Api/Api");
+const Request   = require('lambda-proxy-utils').Request
 
-exports.handler = async (event) => {
+exports.handler = async (event, context, callback) => {
     try {
         if (event.event || event.eventType) {
             const res = await subscribeEvents(event);
@@ -25,6 +26,9 @@ exports.handler = async (event) => {
         } else if (event.request) {
             const res = await Api.getNetworkState(event.sensorUID);
             return res;
+        } else if (event.path) {
+            let result = await routeProxyIntegration(event, callback);
+            return result;
         } else {
             throw new Error(`Unknown Lambda trigger: ${JSON.stringify(event)}`);
         }
@@ -130,6 +134,17 @@ publishCommands = async (payload) => {
 
     else {
         throw new Error(`Unknown publish command = ${payload.command}`);
+    }
+}
+
+routeProxyIntegration = async (req, callback) => {
+    const path = req.path;
+
+    if (path == Constants.ENDPOINT_OTA_UPDATE) {
+        await Api.otaUpdate(req, callback);
+        return true;
+    } else {
+        throw new Error(`INDEX: Unknown path for request => ${path}`);
     }
 }
 
