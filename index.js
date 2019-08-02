@@ -137,10 +137,11 @@ publishCommands = async (payload) => {
     }
 }
 
-routeProxyIntegration = async (req, callback) => {
-    const path = req.path;
+routeProxyIntegration = async (event, callback) => {
+    const path = event.path;
 
     if (path == Constants.ENDPOINT_OTA_UPDATE) {
+        const req = new Request(event);
         await Api.otaUpdate(req, callback);
         return true;
     } else {

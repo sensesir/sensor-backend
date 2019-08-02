@@ -43,37 +43,19 @@ module.exports = {
 
     otaUpdate: async (req, callback) => {
         console.log('API: Serving OTA update to sensor');
-
-        // Get latest version
-        const itemIdentifiers = {
-            TableName: Constants.TABLE_FIRMWARE_DISTRIBUTIONS,
-            Key: { release: "latest" }
-        };
-
-        const latestRelease = await getItem(itemIdentifiers);
-        const binFileName = latestRelease.binaryFileName;
+        const sensorUID = req.getHeader('sensor-uid');
+        const build = req.getHeader('firmware-build');
+        const version = req.getHeader('firmware-version');
+        const binFileName = await getBinFileName(build, version);
 
         // Fetch the file from S3
-        const binFileData = await getFile(binFileName);
-        console.log(`API: Got firmware file from S3 => ${binFileData}`);
+        console.log(`API: Fetching firmware binary from S3`);
+        const binFile = await getFile(binFileName);
+        const binFileData = binFile.Body;
+        // console.log(`API: Got firmware file from S3 => ${binFileData}`);  // Temp
 
-        // Pipe a stream to a response object 
         const res = new Response();
-        // let readStream = new Stream.PassThrough();
-        // readStream.end(binFileData.body);
-
-        // Event listeners on read stream
-        /*
-        readStream.on('error', (error) => { throw error } );
-        readStream.on('end', () => { console.log('API: Completed binary file stream') });
-        readStream.on('response', (response) => {
-            const streamRes = JSON.stringify(response);
-            console.log(`API: Stream start response => ${streamRes}`);
-        });
-        */
-
-        // readStream.pipe(res);
-        callback(null, res.send(binFileData.body));            // Not sure if this will keep the function alive ??         
+        callback(null, res.send(binFileData));      
     }
 };
 
@@ -105,5 +87,28 @@ const getFile = (filename) => {
             return resolve(data);
         });
     });
+}
+
+const getBinFileName = async (build=null, version=null) => {
+    if (build && version) {
+        const itemIdentifiers = {
+            TableName: Constants.TABLE_FIRMWARE_DISTRIBUTIONS,
+            Key: { 
+                build: Number(build), 
+                version: version
+            }
+        };
+
+        const release = await getItem(itemIdentifiers);
+        const binFileName = release.binaryFileName;
+
+        if (!binFileName) { throw new Error('No binary file found for version & build specified') }
+        return binFileName;
+    } 
+    
+    else {
+        console.log(`OTA: No version or build speficied, fetching latest`);
+        return null;
+    }
 }
 

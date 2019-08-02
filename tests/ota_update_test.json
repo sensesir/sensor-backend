@@ -1,3 +1,8 @@
 {
-    "path": "/otaUpdate"
+    "path": "/otaUpdate",
+    "headers": {
+        "sensor-uid": "SensorJPDev",
+        "firmware-build": "1",
+        "firmware-version": "1.1.0"
+    }
 }
