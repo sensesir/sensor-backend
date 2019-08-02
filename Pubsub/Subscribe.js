@@ -387,6 +387,7 @@ const createTemplateSensorItem = async (sensorUID) => {
         ip: "None",
         lastBoot: "None",
         lastPing: "None",
+        lastRSSI: -100.0,
         networkDown: "None",
         networkUp: "None",
         online: false,
