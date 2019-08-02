@@ -239,7 +239,32 @@ module.exports = {
 
         await updateDocument(update);
         await Publish.sensorDisconnnect(payload.clientId);
-    }
+    },
+
+    rssiReported: async (payload) => {
+        console.log(`SUBSCRIBE: Logging rssi value`);
+        const rssiValue = payload.rssi;
+        const sensorUID = payload.sensorUID;
+
+        const update = {
+            TableName: Constants.TABLE_SENSORS,
+            Key: { sensorUID: sensorUID},
+            UpdateExpression: `set lastRSSI= :rssi, 
+                               #ol = :ol`,
+            ExpressionAttributeValues: {
+                ":rssi": rssiValue,
+                ":ol": true 
+            },
+            ExpressionAttributeNames: {
+                "#ol": "online"               
+            },
+            ReturnValues:"UPDATED_NEW"            
+        };
+
+        await updateDocument(update);
+        await Publish.rssiReported(sensorUID, rssiValue);
+        return true; 
+    },
 }
 
 const createItem = (itemData) => {

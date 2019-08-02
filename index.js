@@ -109,6 +109,14 @@ subscribeEvents = async (payload) => {
         }
     }
 
+    if (payload.event === Constants.EVENT_RSSI) {
+        await Subscribe.rssiReported(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify("Updated sensor rssi value after report from device")
+        }
+    }
+
     else {
         throw new Error(`Unhandled event type = ${payload.event}`);
     }

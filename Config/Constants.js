@@ -34,6 +34,7 @@ module.exports = {
     EVENT_MQTT_CONN_FAILED: "mqttConFailure",
     EVENT_DISCONNECT:       "disconnected", 
     EVENT_CONNECT:          "connected",        // For mobile client only
+    EVENT_RSSI:             "rssi",
 
     // Commands
     COMMAND_HEALTH:     "health",
