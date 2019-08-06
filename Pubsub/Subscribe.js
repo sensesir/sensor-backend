@@ -26,7 +26,7 @@ module.exports = {
         let sensorDataExists = await itemExists(itemIdentifiers);
         if (!sensorDataExists) {
             console.log(`SUBSCRIBE: Sensor item not yet created, creating`);
-            await createTemplateSensorItem(payload.sensorUID);
+            await createTemplateSensorItem(payload.sensorUID, payload.userUID);
         }
 
         const update = {
@@ -56,7 +56,9 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        return await updateDocument(update);
+        await updateDocument(update);
+        await Publish.sensorConnected(payload.sensorUID);
+        return true;
     },
 
     boot: async (payload) => {
@@ -376,7 +378,7 @@ const isSensor = (payload) => {
     return true;
 }
 
-const createTemplateSensorItem = async (sensorUID) => {
+const createTemplateSensorItem = async (sensorUID, userUID) => {
     const sensorDataTemplate = {
         doorCloseCommands: 0,
         doorOpenCommands: 0,
@@ -393,7 +395,7 @@ const createTemplateSensorItem = async (sensorUID) => {
         online: false,
         reconnections: 0,
         sensorUID: sensorUID,
-        userUID: "None"
+        userUID: userUID ? userUID : "None"   // legacy bridge
     }
 
     const itemData = {
