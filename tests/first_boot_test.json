@@ -1,5 +1,7 @@
 {
     "sensorUID": "SensorJPDev",
     "event": "firstBoot",
-    "firmwareVersion": "0.2.0"
+    "firmwareVersion": "0.2.0",
+    "state": "closed",
+    "userUID": "a3717baf-daa4-403f-a31c-ce8e6d0891f0"
 }

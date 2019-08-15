@@ -72,6 +72,23 @@ module.exports = {
         }
         console.log(`PUBLISH: Publishing to topic => ${topic}`);
         return await publishMessage(topic, payload);
+    },
+
+    rssiReported: async (sensorUID, rssiValue) => {
+        let userUID = await getUserFromSensorUID(sensorUID);
+        if (!userUID) {
+            console.warn("Tried to update sensor state without a user profile linked to a sensor");
+            return true;
+        }
+
+        const topic = `${Constants.TARGET_MOBILE_CLIENT}/${userUID}/v${Constants.MOBILE_CLIENT_SOFTWARE_VERSION.charAt(0)}/${Constants.CATEGORY_EVENT}/${Constants.EVENT_RSSI}`;
+        const payload = {
+            userUID: userUID,
+            event: Constants.EVENT_RSSI,
+            rssi: rssiValue
+        }
+        console.log(`PUBLISH: Publishing to topic => ${topic}`);
+        return await publishMessage(topic, payload);
     }
 }
 

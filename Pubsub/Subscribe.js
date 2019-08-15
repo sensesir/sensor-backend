@@ -26,7 +26,8 @@ module.exports = {
         let sensorDataExists = await itemExists(itemIdentifiers);
         if (!sensorDataExists) {
             console.log(`SUBSCRIBE: Sensor item not yet created, creating`);
-            await createTemplateSensorItem(payload.sensorUID);
+            await createTemplateSensorItem(payload.sensorUID, payload.userUID);
+            await addSensorUIDToUserItem(payload.sensorUID, payload.userUID)
         }
 
         const update = {
@@ -37,12 +38,14 @@ module.exports = {
             UpdateExpression: `set firstBoot = :firstBoot, 
                                lastPing= :lastPing,
                                firmwareVersion = :firmwareVersion, 
+                               doorState = :doorState,
                                ip = :ip, 
                                lastBoot = :lastBoot,
                                networkUp = :networkUp,
                                #ol = :ol`,
             ExpressionAttributeValues: {
                 ":lastPing": currentDate,
+                ":doorState": payload.state ? payload.state : "Unknown",
                 ":firstBoot": currentDate,
                 ":firmwareVersion": payload.firmwareVersion,
                 ":ip": payload.ip ? payload.ip : "None",
@@ -56,7 +59,9 @@ module.exports = {
             ReturnValues:"UPDATED_NEW"            
         };
 
-        return await updateDocument(update);
+        await updateDocument(update);
+        await Publish.sensorConnected(payload.sensorUID);
+        return true;
     },
 
     boot: async (payload) => {
@@ -239,7 +244,32 @@ module.exports = {
 
         await updateDocument(update);
         await Publish.sensorDisconnnect(payload.clientId);
-    }
+    },
+
+    rssiReported: async (payload) => {
+        console.log(`SUBSCRIBE: Logging rssi value`);
+        const rssiValue = payload.rssi;
+        const sensorUID = payload.sensorUID;
+
+        const update = {
+            TableName: Constants.TABLE_SENSORS,
+            Key: { sensorUID: sensorUID},
+            UpdateExpression: `set lastRSSI= :rssi, 
+                               #ol = :ol`,
+            ExpressionAttributeValues: {
+                ":rssi": rssiValue,
+                ":ol": true 
+            },
+            ExpressionAttributeNames: {
+                "#ol": "online"               
+            },
+            ReturnValues:"UPDATED_NEW"            
+        };
+
+        await updateDocument(update);
+        await Publish.rssiReported(sensorUID, rssiValue);
+        return true; 
+    },
 }
 
 const createItem = (itemData) => {
@@ -351,7 +381,7 @@ const isSensor = (payload) => {
     return true;
 }
 
-const createTemplateSensorItem = async (sensorUID) => {
+const createTemplateSensorItem = async (sensorUID, userUID) => {
     const sensorDataTemplate = {
         doorCloseCommands: 0,
         doorOpenCommands: 0,
@@ -362,12 +392,13 @@ const createTemplateSensorItem = async (sensorUID) => {
         ip: "None",
         lastBoot: "None",
         lastPing: "None",
+        lastRSSI: -100.0,
         networkDown: "None",
         networkUp: "None",
         online: false,
         reconnections: 0,
         sensorUID: sensorUID,
-        userUID: "None"
+        userUID: userUID ? userUID : "None"   // legacy bridge
     }
 
     const itemData = {
@@ -376,4 +407,22 @@ const createTemplateSensorItem = async (sensorUID) => {
     }
 
     return await createItem(itemData);
+}
+
+const addSensorUIDToUserItem = async (sensorUID, userUID) => {
+    if (!userUID) {
+        console.log(`SUBSCRIBE: Can't add sensorUID to user data - userUID not published with boot event.`);
+        return true;
+    }
+
+    const update = {
+        TableName: Constants.TABLE_USERS,
+        Key: { userUID: userUID },
+        UpdateExpression: `set sensorUID = :sensorUID`,
+        ExpressionAttributeValues: { ":sensorUID": sensorUID },
+        ReturnValues:"UPDATED_NEW"            
+    };
+
+    await updateDocument(update);
+    return true;
 }

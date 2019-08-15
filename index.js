@@ -13,8 +13,16 @@ const Subscribe = require('./Pubsub/Subscribe');
 const Publish   = require('./Pubsub/Publish');
 const Analytics = require('./Analytics/Analytics');
 const Api       = require("./Api/Api");
+const Request   = require('lambda-proxy-utils').Request
 
-exports.handler = async (event) => {
+const packageInfo = require('./package.json');
+let bugsnag = require('@bugsnag/js');
+let bugsnagClient = bugsnag({
+    apiKey: process.env.BUGSNAG_API_KEY,
+    appVersion: packageInfo.version
+});
+
+exports.handler = async (event, context, callback) => {
     try {
         if (event.event || event.eventType) {
             const res = await subscribeEvents(event);
@@ -25,13 +33,22 @@ exports.handler = async (event) => {
         } else if (event.request) {
             const res = await Api.getNetworkState(event.sensorUID);
             return res;
+        } else if (event.path) {
+            let result = await routeProxyIntegration(event, callback);
+            return result;
         } else {
             throw new Error(`Unknown Lambda trigger: ${JSON.stringify(event)}`);
         }
     } catch(error) {
+        await reportErrorBugsnag(error);
         console.error(error);
-        let res = await logErroInSlack(error);
-        return res;
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                message: error.message,
+                stack: error.stack
+            })
+        };
     }
 };
 
@@ -105,6 +122,14 @@ subscribeEvents = async (payload) => {
         }
     }
 
+    if (payload.event === Constants.EVENT_RSSI) {
+        await Subscribe.rssiReported(payload);
+        return {
+            statusCode: 200,
+            body: JSON.stringify("Updated sensor rssi value after report from device")
+        }
+    }
+
     else {
         throw new Error(`Unhandled event type = ${payload.event}`);
     }
@@ -133,6 +158,18 @@ publishCommands = async (payload) => {
     }
 }
 
+routeProxyIntegration = async (event, callback) => {
+    const path = event.path;
+
+    if (path == Constants.ENDPOINT_OTA_UPDATE) {
+        const req = new Request(event);
+        await Api.otaUpdate(req, callback);
+        return true;
+    } else {
+        throw new Error(`INDEX: Unknown path for request => ${path}`);
+    }
+}
+
 logErroInSlack = async (error) => {
     console.log(`INDEX: Logging error in Slack`);
     return await axios.post(process.env.SLACK_WEBHOOK, {
@@ -149,4 +186,15 @@ logErroInSlack = async (error) => {
             message: "Fatal failure - failed to log error"
         } 
     });
+}
+
+const reportErrorBugsnag = (error) => {
+    return new Promise(resolve => {
+        bugsnagClient.notify(error);
+        
+        // Bugsnag - takes a while to report (ensure program doesn't terminate)
+        setTimeout(() => { 
+            resolve(true); 
+        }, 2500);
+    }); 
 }
