@@ -27,6 +27,7 @@ module.exports = {
         if (!sensorDataExists) {
             console.log(`SUBSCRIBE: Sensor item not yet created, creating`);
             await createTemplateSensorItem(payload.sensorUID, payload.userUID);
+            await addSensorUIDToUserItem(payload.sensorUID, payload.userUID)
         }
 
         const update = {
@@ -37,12 +38,14 @@ module.exports = {
             UpdateExpression: `set firstBoot = :firstBoot, 
                                lastPing= :lastPing,
                                firmwareVersion = :firmwareVersion, 
+                               doorState = :doorState,
                                ip = :ip, 
                                lastBoot = :lastBoot,
                                networkUp = :networkUp,
                                #ol = :ol`,
             ExpressionAttributeValues: {
                 ":lastPing": currentDate,
+                ":doorState": payload.state ? payload.state : "Unknown",
                 ":firstBoot": currentDate,
                 ":firmwareVersion": payload.firmwareVersion,
                 ":ip": payload.ip ? payload.ip : "None",
@@ -404,4 +407,22 @@ const createTemplateSensorItem = async (sensorUID, userUID) => {
     }
 
     return await createItem(itemData);
+}
+
+const addSensorUIDToUserItem = async (sensorUID, userUID) => {
+    if (!userUID) {
+        console.log(`SUBSCRIBE: Can't add sensorUID to user data - userUID not published with boot event.`);
+        return true;
+    }
+
+    const update = {
+        TableName: Constants.TABLE_USERS,
+        Key: { userUID: userUID },
+        UpdateExpression: `set sensorUID = :sensorUID`,
+        ExpressionAttributeValues: { ":sensorUID": sensorUID },
+        ReturnValues:"UPDATED_NEW"            
+    };
+
+    await updateDocument(update);
+    return true;
 }

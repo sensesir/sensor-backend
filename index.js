@@ -15,6 +15,13 @@ const Analytics = require('./Analytics/Analytics');
 const Api       = require("./Api/Api");
 const Request   = require('lambda-proxy-utils').Request
 
+const packageInfo = require('./package.json');
+let bugsnag = require('@bugsnag/js');
+let bugsnagClient = bugsnag({
+    apiKey: process.env.BUGSNAG_API_KEY,
+    appVersion: packageInfo.version
+});
+
 exports.handler = async (event, context, callback) => {
     try {
         if (event.event || event.eventType) {
@@ -33,9 +40,15 @@ exports.handler = async (event, context, callback) => {
             throw new Error(`Unknown Lambda trigger: ${JSON.stringify(event)}`);
         }
     } catch(error) {
+        await reportErrorBugsnag(error);
         console.error(error);
-        let res = await logErroInSlack(error);
-        return res;
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                message: error.message,
+                stack: error.stack
+            })
+        };
     }
 };
 
@@ -173,4 +186,15 @@ logErroInSlack = async (error) => {
             message: "Fatal failure - failed to log error"
         } 
     });
+}
+
+const reportErrorBugsnag = (error) => {
+    return new Promise(resolve => {
+        bugsnagClient.notify(error);
+        
+        // Bugsnag - takes a while to report (ensure program doesn't terminate)
+        setTimeout(() => { 
+            resolve(true); 
+        }, 2500);
+    }); 
 }
