@@ -9,6 +9,7 @@ const AWS = require("aws-sdk");
 AWS.config.update({ region: process.env.IOT_REGION });
 let docClient = new AWS.DynamoDB.DocumentClient()
 const Constants = require('../Config/Constants');
+const UUID = require('uuid-v4');
 
 module.exports = {
     logConnect: async (data) => {
@@ -54,9 +55,13 @@ module.exports = {
 }
 
 const logEvent = async (componentUID, component, date, event, eventData=null) => {
+    // Generate unique ID for event
+    const eventUID = UUID(); 
+
     const newItem = {
         TableName: Constants.TABLE_ANALYTICS,
         Item: {
+            eventUID: eventUID,             
             componentUID: componentUID,
             component: component,
             date: date,           
